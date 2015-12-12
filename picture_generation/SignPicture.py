@@ -11,11 +11,12 @@ def PILtoQPixmap(pil_image):
 
 class SignPicture:
 
-    def __init__(self, sign, font, size):
+    def __init__(self, sign, font, size, fontName):
         self.sign = sign
         self.size = size
         self.width = size[0]
         self.height = size[1]
+        self.fontName = fontName
         self.pilImageGrey = Image.new("L", size, "white")
         ImageDraw.Draw(self.pilImageGrey).text((00,00), sign, fill='black', font=font)
         self.pilImageColor = Image.new("RGB", size, "white")
@@ -23,17 +24,6 @@ class SignPicture:
         self.pilImageBlackAndWhite = Image.new("1", size, "white")
         ImageDraw.Draw(self.pilImageBlackAndWhite).text((00,00), sign, fill='black', font=font)
 
-    def toQImage(self):
-        #convert PIL image to a PIL.ImageQt object
-        imageQt = ImageQt(self.pilImageColor)
-        #cast PIL.ImageQt object to QImage object -that is the trick!!!
-        qimage = QImage(imageQt)
-        return qimage
-
-    def toQPixmap(self):
-        qImage = self.toQImage()
-        pixmap = QPixmap(qImage)
-        return pixmap
 
     def isBlank(self):
         pixels = self.pilImageGrey.load()
@@ -46,7 +36,7 @@ class SignPicture:
     def draw_ellipse_on(self, point, color=128):
         image = self.pilImageColor
         draw = ImageDraw.Draw(image)
-        r = 5
+        r = 1
         leftCorner = (point[0] - r, point[1] - r)
         rightCorner = (point[0] + r, point[1] + r)
         draw.ellipse([leftCorner, rightCorner], fill=None, outline=color)

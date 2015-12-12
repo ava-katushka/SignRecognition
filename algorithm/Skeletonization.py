@@ -63,13 +63,12 @@ class TemplateImageSkeletonization:
             #delete noise pixels
             if pixels_to_delete:
                 self.delete_by_template(TemplateImageSkeletonization.noise_templates)
-         print "iterations = " +  str(iterations)
          return self.image
 
     def delete_by_template(self, templates):
         deleted_pixels = 0
-        for i in range(1, self.width):
-            for j in range(1, self.height):
+        for i in range(1, self.width - 1):
+            for j in range(1, self.height - 1):
                 if self.image.getpixel((i, j)) == TemplateImageSkeletonization.B and self.deletable(i, j, templates):
                     self.delete_pixel(i, j)
                     deleted_pixels += 1
@@ -83,7 +82,10 @@ class TemplateImageSkeletonization:
         region = []
         for j in range(y - 1, y + 2):
             for i in range(x - 1, x + 2):
-                region.append(self.image.getpixel((i,j)))
+                try:
+                    region.append(self.image.getpixel((i,j)))
+                except:
+                    print (i,j)
         return region
 
     # checks if center of 3x3 region is possible to delete via skeletonisation

@@ -4,7 +4,8 @@ import os
 import random
 from SignPicture import SignPicture
 
-#taken from http://stackoverflow.com/questions/1366068/whats-the-complete-range-for-chinese-characters-in-unicode
+
+# taken from http://stackoverflow.com/questions/1366068/whats-the-complete-range-for-chinese-characters-in-unicode
 # Unicode currently has 74605 CJK characters. CJK characters not only includes characters used by Chinese, but also Japanese Kanji, Korean Hanja, and Vietnamese Chu Nom. Some CJK characters are not Chinese characters.
 #
 # 1) 20941 characters from the CJK Unified Ideographs block.
@@ -47,7 +48,9 @@ from SignPicture import SignPicture
 class ChineseCharacterGenerator:
     _SCRIPT_ROOT = os.path.abspath(os.path.dirname(__file__))
     font_directory = _SCRIPT_ROOT + "/fonts/"
-    fonts = ["simsun.ttc"]
+    ##"chinese.msyh.ttf","ufonts.com_microsoft-yahei.ttf" TODO: find normal yahel
+    fonts = ["Hiragino Sans GB W3.otf", "KaiTi_GB2312.ttf", "FangSong_GB2312.ttf", "kaiti.ttf",
+             "fangsong.ttf", "wts11.ttf", "WCL-07.ttf", "simhei.ttf", "simsun.ttc"]
     size = 200
     image_size = (size, size)
     image_format = "L"
@@ -60,7 +63,13 @@ class ChineseCharacterGenerator:
         return fontName
 
     @classmethod
-    #returns random Chinese character in range of signes_codes
+    def _getNextFont(cl, fontname, j=1):
+        i = cl.fonts.index(fontname)
+        next = (i + j) % len(cl.fonts)
+        return cl.fonts[next]
+
+    @classmethod
+    # returns random Chinese character in range of signes_codes
     def _randomChar(cl):
         fullrange = 0
         for range in cl.signes_codes:
@@ -77,15 +86,30 @@ class ChineseCharacterGenerator:
             fullrange += end - start
 
     @classmethod
-    def random(cl):
+    def random(cl, size):
         fontName = cl._randomFontName()
-        ttf=ImageFont.truetype(fontName, size=cl.size)
+        ttf = ImageFont.truetype(fontName, size=size)
         sign = cl._randomChar()
-        return SignPicture(sign, ttf, cl.image_size)
+        shortFontName = fontName.split("/")[-1]
+        return SignPicture(sign, ttf, (size, size), shortFontName)
+
+    @classmethod
+    def _charIteration(cl, signPicture, i):
+        fontName = cl._getNextFont(signPicture.fontName, i)
+        ttf = ImageFont.truetype(cl.font_directory + fontName, size=signPicture.width)
+        sign = signPicture.sign
+        return SignPicture(sign, ttf, signPicture.size, fontName)
+
+    @classmethod
+    def nextChar(cl, signPicture):
+        return cl._charIteration(signPicture, 1)
+
+    @classmethod
+    def prevChar(cl, signPicture):
+        return cl._charIteration(signPicture, -1)
 
 
 if __name__ == '__main__':
-    image = ChineseCharacterGenerator.random()
+    image = ChineseCharacterGenerator.random(30)
     pixels = image.pilImageGrey.load()
-    print pixels[0, 0]
     image.pilImageGrey.show()
