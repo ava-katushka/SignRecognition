@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
+from collections import defaultdict
 from PIL import Image, ImageDraw, ImageFont
 import os
 import random
-from SignPicture import SignPicture
+from picture_generation.SignPicture import SignPicture
+import pickle
 
 
 # taken from http://stackoverflow.com/questions/1366068/whats-the-complete-range-for-chinese-characters-in-unicode
@@ -48,13 +50,16 @@ from SignPicture import SignPicture
 class ChineseCharacterGenerator:
     _SCRIPT_ROOT = os.path.abspath(os.path.dirname(__file__))
     font_directory = _SCRIPT_ROOT + "/fonts/"
+    all_directory = _SCRIPT_ROOT + "/all/"
     ##"chinese.msyh.ttf","ufonts.com_microsoft-yahei.ttf" TODO: find normal yahel
     fonts = ["Hiragino Sans GB W3.otf", "KaiTi_GB2312.ttf", "FangSong_GB2312.ttf", "kaiti.ttf",
              "fangsong.ttf", "wts11.ttf", "WCL-07.ttf", "simhei.ttf", "simsun.ttc"]
     size = 200
     image_size = (size, size)
     image_format = "L"
-    signes_codes = [[u"\u3400", u"\u4db5"], [u"\u4e00", u"\u9fd6"]]
+    #signes_codes = [[u"\u3400", u"\u4db5"], [u"\u4e00", u"\u9fd6"]]
+    #simplified chinese
+    signes_codes = [[u"\u4e00", u"\u9fff"]]
 
     @classmethod
     def _randomFontName(cl):
@@ -94,6 +99,58 @@ class ChineseCharacterGenerator:
         return SignPicture(sign, ttf, (size, size), shortFontName)
 
     @classmethod
+    def charInAllFonts(cl, char, size):
+        result = []
+        for font in cl.fonts:
+            fontName = cl.font_directory + font
+            ttf = ImageFont.truetype(fontName, size=size)
+            picture = SignPicture(char, ttf, (size, size), font)
+            if not picture.isBlank():
+                result.append(picture)
+        return result
+
+    @classmethod
+    def pickle_all_part(cl, part, num):
+        with open("all/all" + str(num) + ".txt", "wb") as file:
+            pickle.dump(part, file)
+
+    #All simplified chinese in all Fonts
+    #Very long operation, pickled result is availiable viam ChineseCharactorGenerator.all()
+    @classmethod
+    def computeAll(cl, size):
+        result = {}
+        num = 0
+        for range in cl.signes_codes:
+            start = ord(range[0])
+            end = ord(range[1])
+            for i in xrange(start, end):
+                char = unichr(i)
+                result[char] = cl.charInAllFonts(char, size)
+                if i % 1000 == 0:
+                    num += 1
+                    print "{} characters already".format(i)
+                    cl.pickle_all_part(result, num)
+                    result = {}
+        return result
+
+    @classmethod
+    def all(cl, size=None):
+        result = {}
+        num = 1
+        onlyfiles = [f for f in os.listdir(cl.all_directory) if os.path.isfile(os.path.join(cl.all_directory, f))]
+        onlyfiles = [f for f in onlyfiles if "all" in f]
+        for fileName in onlyfiles:
+            print fileName
+            with open(cl.all_directory + fileName, "r") as file:
+                part = pickle.load(file)
+                result.update(part)
+                if size and len(result) > size:
+                    break
+            print "Already loaded: {}".format(num)
+            num += 1
+        return result
+
+    @classmethod
     def _charIteration(cl, signPicture, i):
         fontName = cl._getNextFont(signPicture.fontName, i)
         ttf = ImageFont.truetype(cl.font_directory + fontName, size=signPicture.width)
@@ -110,6 +167,15 @@ class ChineseCharacterGenerator:
 
 
 if __name__ == '__main__':
-    image = ChineseCharacterGenerator.random(30)
-    pixels = image.pilImageGrey.load()
-    image.pilImageGrey.show()
+    # image = ChineseCharacterGenerator.random(30)
+    # pixels = image.pilImageGrey.load()
+    # image.pilImageGrey.show()
+    #ChineseCharacterGenerator.computeAll(30)
+    # nums = defaultdict(lambda : 0)
+    all = ChineseCharacterGenerator.all()
+    # for char_fonts in all.values():
+    #     nums[len(char_fonts)] += 1
+    # for key, value in nums.items():
+    #     print "{} times occurs {} characters".format(key, value)
+
+

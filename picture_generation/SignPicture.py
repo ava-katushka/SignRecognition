@@ -2,7 +2,7 @@ __author__ = 'ava-katushka'
 from PIL import Image, ImageDraw, ImageFont
 from PIL.ImageQt import ImageQt
 from PyQt4.QtGui import QImage, QPixmap
-
+import os
 
 def PILtoQPixmap(pil_image):
     imageQt = ImageQt(pil_image)
@@ -10,6 +10,8 @@ def PILtoQPixmap(pil_image):
     return QPixmap(qimage)
 
 class SignPicture:
+    _SCRIPT_ROOT = os.path.abspath(os.path.dirname(__file__))
+    font_directory = _SCRIPT_ROOT + "/fonts/"
 
     def __init__(self, sign, font, size, fontName):
         self.sign = sign
@@ -59,3 +61,10 @@ class SignPicture:
         centerOfMass = [imoment / mass, jmoment / mass]
         #print centerOfMass
         return centerOfMass
+
+
+class SignPictureSimple(SignPicture):
+
+        def __init__(self, sign, font):
+            ttf = ImageFont.truetype(SignPicture.font_directory + font, size=30)
+            SignPicture.__init__(self, sign, ttf, (30,30), font)

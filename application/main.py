@@ -1,5 +1,6 @@
 __author__ = 'ava-katushka'
 from ChineseCharacterApplication import *
+import sys
 
 def main():
     app = QtGui.QApplication(sys.argv)
