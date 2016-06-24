@@ -2,9 +2,12 @@
 import os
 
 from PyQt4 import QtGui
+from PyQt4.QtGui import QInputDialog
 
 from algorithm.HistogrammPiksDetector import HistogrammPiksDetector
+from algorithm.LineDetector import get_symbol_description
 from picture_generation.ChineseCharacterGenerator import ChineseCharacterGenerator
+from picture_generation.SignPicture import SignPictureSimple
 from utils.utils import *
 from algorithm.ImageNoiser import ImageNoiser
 from metrics.Metrics import Metrics
@@ -26,8 +29,6 @@ class Panel:
         self.set_chinese_sign_picture_random()
 
     def offset_from_side(self):
-        if self.offset > 0:
-            print self.offset
         return self.app.left_offset + self.offset
 
     def init_upper_panel(self):
@@ -49,6 +50,8 @@ class Panel:
         self.font_text = self.create_font(u"Шрифт: Имя шрифта.ttf")
         self.update_x(self.font_text)
         self.right_chinese_sign_button = self.create_button(u'>', self.set_chinese_sign_picture_right)
+        self.update_x(self.right_chinese_sign_button)
+        self.choose_num_button = self.create_button(u'Ввести код', self.set_new_sign_ord)
         self.to_new_line(self.left_chinese_sign_button)
 
     def init_second_line(self):
@@ -141,8 +144,8 @@ class Panel:
         self.pic.setPixmap(PILtoQPixmap(pil_image).scaled(self.app.pic_size, self.app.pic_size))
         self.set_right_picture()
         self.font_text.setText(u"Шрифт: " + self.sign_picture.fontName)
-        self.char_description.setText(u"Иероглиф: " + self.sign_picture.sign)
-        self.refresh_setting_to_noise_picture()
+        self.char_description.setText(u"Иероглиф: " + self.sign_picture.sign + u" " + str(ord(self.sign_picture.sign)))
+        #self.refresh_setting_to_noise_picture()
         self.refresh_func()
         # self.text.setText(report)
 
@@ -165,11 +168,20 @@ class Panel:
             image = self.sign_picture.pilImageColor
         cv_image = PILtoCV(image)
         self.horizontal_lines, self.vertical_lines, horiz_histogram, vertical_histogram = HistogrammPiksDetector.getLinesOnPicture(
-            cv_image)
+            cv_image, font=self.sign_picture.fontName)
         pil_image = CVtoPIL(horiz_histogram)
         bottom_image = CVtoPIL(vertical_histogram)
         self.pic_right.setPixmap(PILtoQPixmap(pil_image).scaled(self.app.pic_size, self.app.pic_size))
         self.pic_bottom.setPixmap(PILtoQPixmap(bottom_image).scaled(self.app.pic_size, self.app.pic_size))
+
+
+    def set_new_sign_ord(self):
+        num,ok = QInputDialog.getInt(self.app,u"Ввести код иероглифа",u"Введите код")
+        if ok:
+            print num
+            self.sign_picture = SignPictureSimple(unichr(num), self.sign_picture.fontName)
+            self.refresh_setting_to_new_picture()
+
 
     def set_right_noise(self):
         self.noise_num += 1
@@ -213,6 +225,7 @@ class PanelInteracting:
         panel.like_other = panel.create_button_at(text, func, x, y)
 
 
+
     def button_set_like_right(self):
         self.button_set_like(self.left, self.right)
 
@@ -224,17 +237,10 @@ class PanelInteracting:
 
 
     def metrics(self):
-        horiz_distance = Metrics.levenstein_distance(self.left.horizontal_lines, self.right.horizontal_lines)
-        vertical_distance = Metrics.levenstein_distance(self.left.vertical_lines, self.right.vertical_lines)
-        total_distance = horiz_distance + vertical_distance
-        self.metrics_1.setText(u'Расстояние Левенштейна: ' + unicode(total_distance) + u" Гориз: "
-                               + unicode(horiz_distance) + u" Верт: " + unicode(vertical_distance))
-        horiz_distance = Metrics.dameray_levenstein_distance(self.left.horizontal_lines, self.right.horizontal_lines)
-        vertical_distance = Metrics.dameray_levenstein_distance(self.left.vertical_lines, self.right.vertical_lines)
-        total_distance = horiz_distance + vertical_distance
-        self.metrics_2.setText(u'Расстояние Левенштейна-Дамерау: ' + unicode(total_distance) + u" Гориз: "
-                               + unicode(horiz_distance) + u" Верт: " + unicode(vertical_distance))
-
+        str1 = get_symbol_description(PILtoCV(self.left.sign_picture.pilImageColor), self.left.sign_picture.fontName)
+        str2 = get_symbol_description(PILtoCV(self.right.sign_picture.pilImageColor), self.right.sign_picture.fontName)
+        self.metrics_1.setText(str1)
+        self.metrics_2.setText(str2)
 
 
 class ChineseCharacterApplication(QtGui.QMainWindow):

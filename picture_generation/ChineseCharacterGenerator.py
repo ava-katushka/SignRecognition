@@ -67,6 +67,11 @@ class ChineseCharacterGenerator:
         fontName = cl.font_directory + cl.fonts[fontNum]
         return fontName
 
+
+    @classmethod
+    def sign_range(cls):
+        return cls.signes_codes[0]
+
     @classmethod
     def _getNextFont(cl, fontname, j=1):
         i = cl.fonts.index(fontname)

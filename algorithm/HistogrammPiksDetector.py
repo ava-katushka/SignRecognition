@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from algorithm.LineDetector import count_max_lines, draw_line_x, draw_line_y
+from algorithm.LineDetector import count_max_lines, count_continius_lines_and_sides, draw_line_x, draw_line_y, \
+    get_lines_points
 from utils.utils import binarize_cv_image, blank_cv_image
 import numpy as np
 import copy
@@ -66,10 +67,11 @@ class HistogrammPiksDetector:
         return hist
 
     @classmethod
-    def getLinesOnPicture(cls, img, median_num=17):
+    def getLinesOnPicture(cls, img, median_num=17, font=""):
         cls.median_num = median_num
         img = binarize_cv_image(img)
-        x_points, y_points = count_max_lines(img)
+        #x_points, y_points = count_max_lines(img)
+        x_points, y_points = count_continius_lines_and_sides(img,font)
         horizontal_lines, horizontal_median = HistogrammPiksDetector.getPiksLines(x_points)
         vertical_lines, vertical_median = HistogrammPiksDetector.getPiksLines(y_points)
         # print u"Горизонтальные линии:"
@@ -87,6 +89,14 @@ class HistogrammPiksDetector:
         horizontal_lines = HistogrammPiksDetector.getPiksLinesBinarized(x_points)
         vertical_lines = HistogrammPiksDetector.getPiksLinesBinarized(y_points)
         return horizontal_lines, vertical_lines
+
+
+    @classmethod
+    def getHistogramLines(cls, img, median_num=17):
+        cls.median_num = median_num
+        img = binarize_cv_image(img)
+        x_points, y_points = count_max_lines(img)
+        return x_points, y_points
 
     @classmethod
     def getPiksLinesBinarized(cls, points):

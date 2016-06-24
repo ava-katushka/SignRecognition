@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
 import random
+
 import sys
+import os
+curFilePath = os.path.dirname(os.path.realpath(__file__))
+curDirPath = os.path.dirname( curFilePath )
+sys.path.append(curDirPath)
+print sys.path
+
 from picture_generation.SignPicture import SignPictureSimple
 
 __author__ = 'ava-katushka'
@@ -63,6 +70,10 @@ class Database_Work:
 
 
     def __init__(self):
+        tmp = [1,2,3]
+        result = str(tmp) + u'<- result'
+        print result
+
         self._SCRIPT_ROOT = os.path.abspath(os.path.dirname(__file__))
         self.database_file = os.path.join(self._SCRIPT_ROOT, "picture_database.txt")
         self.metrics_file = os.path.join(self._SCRIPT_ROOT, "metrics_database2.txt")
@@ -174,12 +185,46 @@ class Panel:
         pic.resize(width, height)
         return pic
 
+    def create_statics(self, id, myself_num):
+        pic_set = self.db_work.picture_on_distance[id]
+
+        all_hieroglyph_set = set([])
+        myself_positions = []
+        myself_text = u''
+
+        group_start = 0
+
+        for i in range( 0, len(pic_set) ):
+            cur_picture = pic_set[i]
+            picture_info = self.db_work.pictures[cur_picture.id]
+
+            if picture_info.num == myself_num:
+                myself_positions.append( i )
+            if cur_picture.metrics() != pic_set[group_start].metrics():
+                myself_text += str( pic_set[group_start].metrics() ) + u':' + str( group_start ) + u'-' + str(i - 1) + u'#' + str( len( all_hieroglyph_set ) ) + u' from ' + str( i ) + u'\r\n'
+                group_start = i
+
+            all_hieroglyph_set.add( picture_info.num )
+
+        myself_text += str( pic_set[group_start].metrics() ) + u':' + str( group_start ) + u'-' + str(len( pic_set ) - 1) + u'#' + str( len( all_hieroglyph_set ) ) + u' from ' + str( len( pic_set ) ) + u'\r\n'
+        myself_text = u'My self positions: ' + str( myself_positions ) + u'\r\n' + myself_text
+
+        return myself_text
+
+
     def set_chinese_sign_picture_random(self):
         num = random.randint(0, len(self.db_work.pictures) )
         picture = self.db_work.pictures[num]
         self.id = picture.id
         self.sign_picture = SignPictureSimple(unichr(picture.num), picture.font)
         self.refresh_setting_to_new_picture()
+
+
+        msg = QtGui.QMessageBox()
+        msg.setText( u'stat' )
+        msg.setDetailedText( self.create_statics( self.id, picture.num ) )
+        msg.setStandardButtons(QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)
+        msg.exec_()
 
     def set_picture(self, picture, noise_num=0):
         self.sign_picture = picture
@@ -203,9 +248,6 @@ class Panel:
         self.num_text.setText( u"Иероглиф: " + unichr(sign_info.num) + u' Номер:' + str(sign_info.num))
 
         self.refresh_func()
-
-
-
 
     def get_picture_on_distance(self, id, distance):
         pic_set = self.db_work.picture_on_distance[id]

@@ -27,9 +27,9 @@ def CVtoPIL(cv_img):
 
 
 def binarize_cv_image(img):
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    (thresh, img_bw) = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
-    img = cv2.cvtColor(img_bw, cv2.COLOR_GRAY2RGB)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    #(thresh, img) = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+    img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
     return img
 
 def blank_cv_image(height, width):

@@ -1,0 +1,33 @@
+import numpy as np
+import cv2
+from picture_generation.ChineseCharacterGenerator import ChineseCharacterGenerator
+from algorithm.LineDetector import get_symbol_description_unknown
+
+from os import listdir
+from os.path import isfile, join
+database_path = "/Users/ava-katushka/Documents/botanstvo/Diploma/kuzmin_data_base/full_database/"
+onlyfiles = [f for f in listdir(database_path) if isfile(join(database_path, f))]
+
+sign_range =ChineseCharacterGenerator.sign_range()
+start = ord(sign_range[0])
+end = ord(sign_range[1])
+i = 0
+for file in onlyfiles:
+    char = file.split('_')[0]
+    if len(char) == 3 and start <= ord(char.decode("utf-8")) <= end:
+        if i == 3:
+            img = cv2.imread(database_path + file, 0)
+            print get_symbol_description_unknown(img)
+            print ord(char.decode("utf-8"))
+            cv2.imshow('image',img)
+            cv2.waitKey(0)
+        i += 1
+
+
+#
+# for i in range(start, end):
+#     unicode_chr = unichr(i)
+#     encoded_chr = unicode_chr.encode("utf-8")
+#     if len(encoded_chr) == 3:
+#         print ord(encoded_chr[0]), ord(encoded_chr[1]), ord(encoded_chr[2])
+
